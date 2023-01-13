@@ -34,7 +34,7 @@ for i in range(1, columns*rows + 1):
     img_xy = np.random.randint(len(train_dataset))
     img = train_dataset[img_xy][0][0,:,:]
     fig.add_subplot(rows, columns, i)
-    plt.title(labels_map[train_dataset[img_xy][1]])
+    plt.title(labels_map[train_dataset[img_xy][1]]) # 라벨(label)에 접근
     plt.axis('off')
     plt.imshow(img, cmap='gray')
 plt.show()
@@ -45,6 +45,7 @@ plt.show()
 # rand(num)는 0~1 사이의 정규표준분포 난수를 행렬로 (1xnum) 출력, rand(a,b)는 (axb)
 # np.random.rand(4,2) -> array([[0.11, 0.22], [0.66, 0.22], ... ])
 
+'''
 ### ConvNet이 아닌 DNN 먼저 실습
 class FashionDNN(nn.Module):
     def __init__(self):  # 1
@@ -118,16 +119,6 @@ for epoch in range(num_epochs):
         optimizer.step()
         count += 1
 
-        '''
-        if (count == 100):
-            print("outputs : ")
-            print(outputs.shape)    # [100, 10]
-            print("labels : ")
-            print(labels.shape)     # 100
-            print("loss : ")
-            print(loss)             # 0.6151
-        '''
-
         if not (count % 50):    # count를 50으로 나누었을 때, 나머지가 0이 아니라면 실행
             total = 0
             correct = 0
@@ -156,3 +147,15 @@ for epoch in range(num_epochs):
 # forward 단계에서 테이프는 수행하는 모든 연산을 저장한다. 그리고 backward 단계에서 저장된 값들을 꺼내서 사용한다.
 # 즉 Autograd는 Variable을 사용해서 backward를 위한 미분 값을 자동으로 계산해준다.
 # 따라서 자동 미분을 계산하기 위해서는 torch.autograd 패키지 안에 있는 Variable을 이용해야 함
+        
+'''
+
+class FashionCNN(nn.Module):
+    def __init__(self):
+        super(FashionCNN, self).__init__()
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
