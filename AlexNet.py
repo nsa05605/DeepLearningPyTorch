@@ -50,7 +50,7 @@ device = ("cuda" if torch.cuda.is_available() else "cpu")
 class_name = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat',
                'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']       # 총 10개의 클래스
 
-# print(torch.__version__)      # 1.12.1
+print(torch.__version__)      # 1.12.1
 print(device)                 # cuda
 
 
@@ -180,7 +180,7 @@ def test(model, device, test_loader):
             pred = output.max(1, keepdim=True)[1]
             correct += pred.eq(target.view_as(pred)).sum().item()
         test_loss /= len(test_loader.dataset)   # -> mean
-        print("\nTest Set : Average loss: {:,4f}, Accuracy: {}/{} ){.0f}%)\n".format(
+        print("\nTest Set : Average loss: {:.4f}, Accuracy: {}/{} ){:.0f}%)\n".format(
             test_loss, correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset)))
         print('='*50)
 
