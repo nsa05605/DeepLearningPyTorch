@@ -153,6 +153,7 @@ def main():
 
     ### 파일 시스템
     # 폴더 경로
+    model_dir = 'models/'
     data_dir = 'data/archive/cityscapes_data/'
 
     # data_dir의 경로와 train을 결합하여 train_dir에 저장
@@ -160,8 +161,8 @@ def main():
     val_dir = os.path.join(data_dir, 'val')
 
     # train_dir 경로에 있는 모든 파일을 리스트의 형태로 불러와서 train_fns에 저장
-    train_fns = os.listdir(train_dir)
-    val_fns = os.listdir(val_dir)
+    #train_fns = os.listdir(train_dir)
+    #val_fns = os.listdir(val_dir)
 
     ### Output label 정의하기
     num_items = 1000
@@ -175,10 +176,10 @@ def main():
     # k-means clustering 알고리즘을 사용하여 label_model에 저장
     label_model = KMeans(n_clusters=num_classes)
     label_model.fit(color_array)
-
+    '''
     ### 모델 학습하기
     batch_size = 16
-    epochs = 10
+    epochs = 20
     lr = 0.01
     num_classes = 10
 
@@ -212,6 +213,60 @@ def main():
 
     print(len(epoch_losses))
     print(epoch_losses)
+
+    fig, axes = plt.subplots(1, 2, figsize=(10,5))
+    axes[0].plot(step_losses)
+    axes[1].plot(epoch_losses)
+    plt.show()
+
+    model_name = "UNet.pth"
+    torch.save(model.state_dict(), model_dir + model_name)
+    '''
+
+    model_name = "UNet.pth"
+    model_path = model_dir + model_name
+    model_ = UNet(input_channels=3, num_classes=num_classes)
+    model_.to(device)
+    model_.load_state_dict(torch.load(model_path))
+
+    test_batch_size = 2
+    dataset = CityspaceDataset(val_dir, label_model)
+    data_loader = DataLoader(dataset, batch_size=test_batch_size)
+
+    X, Y = next(iter(data_loader))
+    X, Y = X.to(device), Y.to(device)
+    Y_pred = model_(X)
+    print(Y_pred.shape)
+    Y_pred = torch.argmax(Y_pred, dim=1)
+    print(Y_pred.shape)
+
+    inverse_transform = transforms.Compose([
+        transforms.Normalize((-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225), (1 / 0.229, 1 / 0.224, 1 / 0.225))
+    ])
+
+    fig, axes = plt.subplots(test_batch_size, 3, figsize=(3 * 5, test_batch_size * 5))
+
+    iou_scores = []
+
+    for i in range(test_batch_size):
+        landscape = inverse_transform(X[i]).permute(1, 2, 0).cpu().detach().numpy()
+        label_class = Y[i].cpu().detach().numpy()
+        label_class_predicted = Y_pred[i].cpu().detach().numpy()
+
+        # IOU score
+        intersection = np.logical_and(label_class, label_class_predicted)
+        union = np.logical_or(label_class, label_class_predicted)
+        iou_score = np.sum(intersection) / np.sum(union)
+        iou_scores.append(iou_score)
+
+        axes[i, 0].imshow(landscape)
+        axes[i, 0].set_title("Landscape")
+        axes[i, 1].imshow(label_class)
+        axes[i, 1].set_title("Label Class")
+        axes[i, 2].imshow(label_class_predicted)
+        axes[i, 2].set_title("Label Class - Predicted")
+
+    plt.show()
 
 if __name__ == '__main__':
     main()
