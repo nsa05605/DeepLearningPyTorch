@@ -16,7 +16,7 @@ import torchvision.transforms as transforms
 
 from tqdm.notebook import tqdm
 
-from UNet import UNet
+from model_UNet import UNet
 
 '''
 ### GPU 설정하기

@@ -4,9 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="20e6c4ba-6101-4d22-9289-7e60ca60c8fe" name="Changes" comment="2023. 02. 09">
+    <list default="true" id="20e6c4ba-6101-4d22-9289-7e60ca60c8fe" name="Changes" comment="2023. 02. 10">
+      <change afterPath="$PROJECT_DIR$/study_Dataset.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/train_MaskRCNN.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AlexNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_AlexNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_UNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/VGG.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_VGG.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_UNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vgg_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_VGG.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,37 +38,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/jihun/PycharmProjects/GaussianProcessRegression&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/jihun/PycharmProjects/DeepLearningPyTorch",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
-}</component>
-  <component name="RunManager">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="DeepLearningPyTorch" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\jihun\anaconda3\envs\torch\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="C:\Users\jihun\PycharmProjects\DeepLearningPyTorch\main.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-  </component>
+}]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -107,7 +90,14 @@
       <option name="project" value="LOCAL" />
       <updated>1675931022712</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="2023. 02. 10">
+      <created>1677912981465</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1677912981465</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -127,6 +117,7 @@
     <MESSAGE value="2023. 01. 27" />
     <MESSAGE value="2023. 01. 31" />
     <MESSAGE value="2023. 02. 09" />
-    <option name="LAST_COMMIT_MESSAGE" value="2023. 02. 09" />
+    <MESSAGE value="2023. 02. 10" />
+    <option name="LAST_COMMIT_MESSAGE" value="2023. 02. 10" />
   </component>
 </project>

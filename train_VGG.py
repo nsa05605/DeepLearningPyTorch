@@ -9,7 +9,7 @@ import torchvision
 from torchvision import transforms as transforms
 from torchsummary import summary as summary_
 
-from VGG import VGG16
+from model_VGG import VGG16
 
 
 '''
