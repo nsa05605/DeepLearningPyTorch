@@ -18,8 +18,8 @@ import torchvision.transforms as transform
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
-from engine import train_one_epoch, evaluate
-import utils
+from tqdm.notebook import tqdm
+
 
 
 ### 데이터셋 정의
@@ -54,6 +54,7 @@ class PedestrianDataset(Dataset):
         # numpy 배열을 PIL 이미지로 변환
         mask = np.array(mask)
         # instances는 다른 색들로 인코딩 되어 있음
+        # obj_ids는 해당 mask에 어떤 instance들이 있는지 알기위해 놓은듯?
         obj_ids = np.unique(mask)
         # 첫 번째 id는 배경이라 제거
         obj_ids = obj_ids[1:]
@@ -87,12 +88,13 @@ class PedestrianDataset(Dataset):
         target["boxes"] = boxes
         target["labels"] = labels
         target["masks"] = masks
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+        target["image_id"] = image_id   # mask가 속한 이미지 idx
+        target["area"] = area           # box의 면적
+        target["iscrowd"] = iscrowd     # 물체가 너무 작은데 많아서 하나의 군집으로 박스를 처리하여 레이블링 했는지에 관한 여부
 
         if self.transform is not None:
             image, target = self.transform(image, target)
+            # image = self.transform(image)
 
         return image, target
 
@@ -101,29 +103,19 @@ class PedestrianDataset(Dataset):
 
 
 
-### 모델 정의
-# torchvision의 모델에서 하나를 이용해 정의
-
-## 1. 미리 학습된 모델로부터 미세 조정(fine tuning)
-
-# COCO로 미리 학습된 모델
-model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights="DEFAULT")
-
-# 분류기를 새로운 것으로 교체하는데, num_classes는 사용자가 정의
-num_classes = 2 # 배경 or 사람
-# 분류기에서 사용할 입력 특징의 차원 정보를 얻음
-in_features = model.roi_heads.box_predictor.cls_score.in_features
-# 미리 학습된 모델의 머리 부분을 새로운 것으로 교체
-model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-
-
 ## PennFudan 데이터셋을 위한 instance segmentation 모델
 # instance segmentation mask도 계산해야 하기 때문에 Mask R-CNN을 사용
+# 미리 학습된 모델로부터 미세 조정(fine tuning) 방법으로 모델 정의
 def get_model_instance_segmentation(num_classes):
     # COCO에서 미리 학습된 instance segmentation model을 불러옴
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(weights="DEFAULT")
+    # 보니까 weight="DEFAULT"로 하면 COCO_V1에서 pre-train 한 모델을 가져오는 듯
+    # model = torchvision.models.detection.maskrcnn_resnet50_fpn(weights="DEFAULT")
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+
+    # 분류기를 새로운 것으로 교체하는데, 이때 num_classes는 객체수 + 1(배경)
 
     # 분류를 위한 입력 특징 차원을 얻음
+    # 분류기에서 사용할 입력 특징의 차원 정보를 얻음
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     # 미리 학습된 헤더를 새로운 것으로 바꿈
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
@@ -132,9 +124,7 @@ def get_model_instance_segmentation(num_classes):
     in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
     hidden_layer = 256
     # 마스크 예측기를 새로운 것으로 바꿈
-    model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,
-                                                       hidden_layer,
-                                                       num_classes)
+    model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask, hidden_layer, num_classes)
     return model
 
 
@@ -150,17 +140,53 @@ def get_transform(train):
     return transform.Compose(transforms)
 
 
-
-
-
-
-
-
-
 ### 학습(train)과 검증(validation)을 수행
+def train():
+    batch_size = 2
+    epochs = 20
+    lr = 0.005
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=0.0005)
+
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+
+    step_losses = []
+    epoch_losses = []
+
+    for epoch in tqdm(range(epochs)):
+        print("epoch {} started".format(epoch))
+        epoch_loss = 0
+
+        for X, Y in tqdm(data_loader_train, total=len(data_loader_train), leave=False):
+            X, Y = X.to(device), Y.to(device)
+            optimizer.zero_grad()
+            Y_pred = model(X)
+            loss = criterion(Y_pred, Y)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+            step_losses.append(loss.item())
+        lr_scheduler.step()
+        epoch_losses.append(epoch_loss / len(data_loader_train))
+        print("epoch {}'s loss : {}".format(epoch, (epoch_loss/len(data_loader_train))))
+
+    print(len(epoch_losses))
+    print(epoch_losses)
+
+    fig, axes = plt.subplots(1, 2, figsize=(10,5))
+    axes[0].plot(step_losses)
+    axes[1].plot(epoch_losses)
+    plt.show()
+
+    torch.save(model.state_dict(), model_dir + model_name)
+
 
 
 def main():
+    train()
+
+if __name__ == "__main__":
     print("main started")
     # 학습을 GPU로 진행하되 GPU가 가용하지 않으면 CPU로 합니다
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -170,22 +196,33 @@ def main():
     num_classes = 2
     # 데이터셋과 정의된 변환들을 사용합니다
     path = "./data/PennFudanPed/"
-    dataset = PedestrianDataset(path, get_transform(train=True))
+    model_dir = 'models/'
+    model_name = "MaskRCNN.pth"
+
+    dataset_train = PedestrianDataset(path, get_transform(train=True))
     dataset_test = PedestrianDataset(path, get_transform(train=False))
 
     # 데이터셋을 학습용과 테스트용으로 나눕니다(역자주: 여기서는 전체의 30개를 테스트에, 나머지를 학습에 사용합니다)
-    indices = torch.randperm(len(dataset)).tolist()
-    dataset = torch.utils.data.Subset(dataset, indices[:-30])
+    indices = torch.randperm(len(dataset_train)).tolist()
+    dataset_train = torch.utils.data.Subset(dataset_train, indices[:-30])
     dataset_test = torch.utils.data.Subset(dataset_test, indices[-30:])
 
+    # # 데이터 로더를 학습용과 검증용으로 정의합니다
+    # data_loader_train = torch.utils.data.DataLoader(
+    #     dataset_train, batch_size=2, shuffle=True, num_workers=4, collate_fn=utils.collate_fn
+    # )
+    #
+    # data_loader_test = torch.utils.data.DataLoader(
+    #     dataset_test, batch_size=1, shuffle=False, num_workers=4, collate_fn=utils.collate_fn
+    # )
     # 데이터 로더를 학습용과 검증용으로 정의합니다
-    data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=2, shuffle=True, num_workers=4,
-        collate_fn=utils.collate_fn)
+    data_loader_train = torch.utils.data.DataLoader(
+        dataset_train, batch_size=1, shuffle=True
+    )
 
     data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1, shuffle=False, num_workers=4,
-        collate_fn=utils.collate_fn)
+        dataset_test, batch_size=1, shuffle=False
+    )
 
     # 도움 함수를 이용해 모델을 가져옵니다
     model = get_model_instance_segmentation(num_classes)
@@ -193,29 +230,6 @@ def main():
     # 모델을 GPU나 CPU로 옮깁니다
     model.to(device)
 
-    # 옵티마이저(Optimizer)를 만듭니다
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.005,
-                                momentum=0.9, weight_decay=0.0005)
-    # 학습률 스케쥴러를 만듭니다
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                   step_size=3,
-                                                   gamma=0.1)
-
-    # 10 에포크만큼 학습해봅시다
-    num_epochs = 10
-
-    for epoch in range(num_epochs):
-        # 1 에포크동안 학습하고, 10회 마다 출력합니다
-        #train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
-        ### 학습하는 코드 넣고 ###
-        # 학습률을 업데이트 합니다
-        lr_scheduler.step()
-        # 테스트 데이터셋에서 평가를 합니다
-        #evaluate(model, data_loader_test, device=device)
-        ### 평가하는 코드 넣기 ###
+    main()
 
     print("That's it!")
-
-if __name__ == "__main__":
-    main()

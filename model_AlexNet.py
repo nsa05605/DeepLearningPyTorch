@@ -179,9 +179,9 @@ def test(model, device, test_loader):
             test_loss += criterion(output, target, reduction='sum').item()
             pred = output.max(1, keepdim=True)[1]
             correct += pred.eq(target.view_as(pred)).sum().item()
-        test_loss /= len(test_loader.dataset)   # -> mean
+        test_loss /= len(test_loader.dataset_train)   # -> mean
         print("\nTest Set : Average loss: {:.4f}, Accuracy: {}/{} ){:.0f}%)\n".format(
-            test_loss, correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset)))
+            test_loss, correct, len(test_loader.dataset_train), 100. * correct / len(test_loader.dataset_train)))
         print('='*50)
 
 print("Start Training")

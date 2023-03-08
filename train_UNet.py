@@ -106,6 +106,7 @@ class CityspaceDataset(Dataset):
         cityscape = self.transform(cityscape)
         return cityscape, label_class
 
+    # cityscape 데이터셋은 원본 이미지와 라벨 이미지가 같이 들어있기 때문에 이것을 분리해줌
     def split_image(self, image):
         image = np.array(image)
         cityscape, label = image[:, :256, :], image[:, 256:, :]
@@ -142,41 +143,7 @@ Y_pred = model(X)
 print(Y_pred.shape) # [16, 10, 256, 256]
 '''
 
-def main():
-
-    print("main started")
-
-    ### GPU 설정하기
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device = torch.device(device)
-    print(device)
-
-    ### 파일 시스템
-    # 폴더 경로
-    model_dir = 'models/'
-    data_dir = 'data/archive/cityscapes_data/'
-
-    # data_dir의 경로와 train을 결합하여 train_dir에 저장
-    train_dir = os.path.join(data_dir, 'train')
-    val_dir = os.path.join(data_dir, 'val')
-
-    # train_dir 경로에 있는 모든 파일을 리스트의 형태로 불러와서 train_fns에 저장
-    #train_fns = os.listdir(train_dir)
-    #val_fns = os.listdir(val_dir)
-
-    ### Output label 정의하기
-    num_items = 1000
-
-    # 0~255 사이의 숫자를 3*num_items번 랜덤하게 뽑기
-    color_array = np.random.choice(range(256), 3 * num_items).reshape(-1, 3)
-    print(color_array.shape)  # (1000, 3)
-
-    num_classes = 10
-
-    # k-means clustering 알고리즘을 사용하여 label_model에 저장
-    label_model = KMeans(n_clusters=num_classes)
-    label_model.fit(color_array)
-    '''
+def train():
     ### 모델 학습하기
     batch_size = 16
     epochs = 20
@@ -208,22 +175,22 @@ def main():
             optimizer.step()
             epoch_loss += loss.item()
             step_losses.append(loss.item())
-            #print("epoch loss : {}".format(epoch_loss))
-        epoch_losses.append(epoch_loss/len(data_loader))
+            # print("epoch loss : {}".format(epoch_loss))
+        epoch_losses.append(epoch_loss / len(data_loader))
+        print("epoch_loss : {}".format(epoch_loss / len(data_loader)))
 
     print(len(epoch_losses))
     print(epoch_losses)
 
-    fig, axes = plt.subplots(1, 2, figsize=(10,5))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     axes[0].plot(step_losses)
     axes[1].plot(epoch_losses)
     plt.show()
 
-    model_name = "UNet.pth"
     torch.save(model.state_dict(), model_dir + model_name)
-    '''
 
-    model_name = "UNet.pth"
+def valid():
+    ### 모델 검증하기
     model_path = model_dir + model_name
     model_ = UNet(input_channels=3, num_classes=num_classes)
     model_.to(device)
@@ -268,5 +235,43 @@ def main():
 
     plt.show()
 
+def main():
+    train()
+    valid()
+
 if __name__ == '__main__':
+
+    ### GPU 설정하기
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = torch.device(device)
+    print(device)
+
+    ### 파일 시스템
+    # 폴더 경로
+    model_dir = 'models/'
+    data_dir = 'data/archive/cityscapes_data/'
+
+    # data_dir의 경로와 train을 결합하여 train_dir에 저장
+    train_dir = os.path.join(data_dir, 'train')
+    val_dir = os.path.join(data_dir, 'val')
+
+    # train_dir 경로에 있는 모든 파일을 리스트의 형태로 불러와서 train_fns에 저장
+    #train_fns = os.listdir(train_dir)
+    #val_fns = os.listdir(val_dir)
+
+    ### Output label 정의하기
+    num_items = 1000
+
+    # 0~255 사이의 숫자를 3*num_items번 랜덤하게 뽑기
+    color_array = np.random.choice(range(256), 3 * num_items).reshape(-1, 3)
+    print(color_array.shape)  # (1000, 3)
+
+    num_classes = 10
+
+    # k-means clustering 알고리즘을 사용하여 label_model에 저장
+    label_model = KMeans(n_clusters=num_classes)
+    label_model.fit(color_array)
+
+    model_name = "UNet_epoch30.pth"
+
     main()

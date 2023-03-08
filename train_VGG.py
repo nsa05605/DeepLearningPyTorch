@@ -99,7 +99,7 @@ def Train(log_interval, model, device, trainloader, optimizer, epoch):
         running_loss += loss.item()
         if batch_idx % log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(trainloader.dataset),
+                epoch, batch_idx * len(data), len(trainloader.dataset_train),
                        100. * batch_idx / len(trainloader), running_loss / log_interval))
             running_loss = 0.0
 
@@ -118,11 +118,11 @@ def Test(model, device, test_loader):
             pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
             correct += pred.eq(target.view_as(pred)).sum().item()
 
-    test_loss /= len(test_loader.dataset)
+    test_loss /= len(test_loader.dataset_train)
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+        test_loss, correct, len(test_loader.dataset_train),
+        100. * correct / len(test_loader.dataset_train)))
 
 def Validation(model, device, testloader, classes):
     class_correct = list(0. for i in range(10))
